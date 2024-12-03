@@ -11,9 +11,11 @@ use App\Http\Controllers\UsersController;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+Route::post('/users/login', [UsersController::class, 'login']);
 
 Route::apiResource('trainer', TrainerController::class);
 Route::apiResource('equipment', EquipmentController::class);
 Route::apiResource('membership', MembershipController::class);
 Route::apiResource('payment', PaymentController::class);
 Route::apiResource('users', UsersController::class);
+

@@ -35,12 +35,15 @@ class UsersController extends Controller
     public function store(Request $request)
     {
         try {
+            // Log the incoming request data
+            \Log::info('Incoming request data: ', $request->all());
+
             $request->validate([
-                'username' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email',
-                'birthdate' => 'required|date',
-                'gender' => 'required|string',
-                'password' => 'required|string|min:8',
+                'username' => 'required',
+                'email' => 'required|email',
+                'birthdate' => 'required',
+                'gender' => 'required',
+                'password' => 'required',
             ]);
 
             $data = Users::create([
@@ -57,8 +60,9 @@ class UsersController extends Controller
                 "status" => true,
                 "message" => "Create successful",
                 "data" => $data
-            ], 200);
+            ], 201); // Use 201 for created
         } catch (Exception $e) {
+            \Log::error('Error creating user: ' . $e->getMessage()); // Log the error
             return response()->json([
                 "status" => false,
                 "message" => "Something went wrong",
@@ -112,11 +116,11 @@ class UsersController extends Controller
             }
 
             $request->validate([
-                'username' => 'string|max:255',
-                'email' => 'email|unique:users,email,' . $id,
-                'birthdate' => 'date',
-                'gender' => 'string',
-                'password' => 'string|min:8',
+                'username' => 'required',
+                'email' => 'required|email|unique:users,email,' . $id,
+                'birthdate' => 'required',
+                'gender' => 'required',
+                'password' => 'required',
             ]);
 
             $data->update($request->all());
@@ -165,4 +169,59 @@ class UsersController extends Controller
             ], 400);
         }
     }
+
+    /**
+     * Login a user.
+     */
+    /**
+ * Login a user.
+ */
+public function login(Request $request)
+{
+    try {
+        // Validasi input
+        $request->validate([
+            'email' => 'required',
+            'password' => 'required',
+        ]);
+
+        // Ambil email dan password dari permintaan
+        $email = $request->input('email');
+        $password = $request->input('password');
+
+        // Cari pengguna berdasarkan email
+        $user = Users::where('email', $email)->first();
+
+        // Cek apakah pengguna ditemukan
+        if ($user && password_verify($password, $user->password)) {
+            return response()->json([
+                "status" => true,
+                "message" => "User found",
+                "data" => [
+                    'id' => $user->id,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                    'birthdate' => $user->birthdate,
+                    'gender' => $user->gender,
+                    'weight' => $user->weight,
+                    'height' => $user->height,
+                    // Tambahkan atribut lain yang ingin Anda kembalikan
+                ]
+            ], 200);
+        } else {
+            // Jika pengguna tidak ditemukan atau password salah
+            return response()->json([
+                "status" => false,
+                "message" => "Invalid credentials"
+            ], 401);
+        }
+    } catch (Exception $e) {
+        return response()->json([
+            "status" => false,
+            "message" => "Something went wrong",
+            "error" => $e->getMessage()
+        ], 400);
+    }
+}
+
 }
